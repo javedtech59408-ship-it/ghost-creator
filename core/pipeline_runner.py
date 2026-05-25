@@ -591,6 +591,7 @@ class PipelineRunner:
                     clips_dir,
                     max_clip_duration=max_clip_dur,
                     progress_callback=_fetch_progress,
+                    cancellation_check=lambda: not self.running,
                 )
                 good = sum(1 for c in clips if c is not None)
                 self._emit(4, f"{good}/{num_segs} clips downloaded", "SUCCESS" if good > 0 else "WARNING")
@@ -635,6 +636,8 @@ class PipelineRunner:
             "INFO",
         )
         for i in range(n_seg):
+            if not self.running:
+                return
             dur = durations[i]
             dst = clips_for_edit / f"e_{i:02d}.mp4"
             src = clips[i] if i < len(clips) else None

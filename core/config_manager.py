@@ -621,7 +621,7 @@ class ConfigManager:
             changed = True
 
         footage = self.get("documentary.footage_source", DEFAULT_CONFIG["documentary.footage_source"])
-        if footage not in ("stock", "meta_ai"):
+        if footage not in ("stock", "meta_ai", "grok"):
             self.set("documentary.footage_source", DEFAULT_CONFIG["documentary.footage_source"])
             changed = True
 
@@ -631,6 +631,14 @@ class ConfigManager:
             changed = True
         if meta_ai != self.get("meta_ai"):
             self.set("meta_ai", meta_ai)
+            changed = True
+
+        grok = dict(self.get("grok", {}) or {})
+        grok_defaults = json.loads(json.dumps(DEFAULT_CONFIG["grok"]))
+        if self._merge_defaults(grok, grok_defaults):
+            changed = True
+        if grok != self.get("grok"):
+            self.set("grok", grok)
             changed = True
 
         return changed

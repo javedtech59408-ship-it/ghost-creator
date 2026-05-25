@@ -58,6 +58,28 @@ def _ffmpeg_exe_names() -> tuple[str, str]:
     return "ffmpeg", "ffprobe"
 
 
+_ffmpeg_validation_cache: dict[str, bool] = {}
+
+def _is_ffmpeg_valid(path: str) -> bool:
+    """Check if the ffmpeg binary supports libx264 encoding."""
+    import subprocess
+    try:
+        creationflags = 0
+        if sys.platform == "win32":
+            creationflags = subprocess.CREATE_NO_WINDOW
+        res = subprocess.run(
+            [path, "-encoders"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=5,
+            creationflags=creationflags
+        )
+        return "libx264" in res.stdout
+    except Exception:
+        return False
+
 def get_ffmpeg_executable() -> str:
     """
     Path to ffmpeg:
@@ -65,7 +87,7 @@ def get_ffmpeg_executable() -> str:
     1. User cache: ``%LOCALAPPDATA%/GhostCreatorAI/ffmpeg`` (first-run download in frozen app)
     2. Next to the executable: ``<install>/ffmpeg/`` (developer / manual drop-in)
     3. PyInstaller bundle legacy: ``_MEIPASS/ffmpeg/`` if present
-    4. ``PATH``
+    4. ``PATH`` (validated to support libx264)
     5. Bare ``ffmpeg`` / ``ffmpeg.exe``
     """
     ff, _ = _ffmpeg_exe_names()
@@ -80,7 +102,13 @@ def get_ffmpeg_executable() -> str:
         return str(bundled.resolve())
     w = shutil.which("ffmpeg")
     if w:
-        return w
+        if w not in _ffmpeg_validation_cache:
+            _ffmpeg_validation_cache[w] = _is_ffmpeg_valid(w)
+        if _ffmpeg_validation_cache[w]:
+            return w
+        else:
+            # log warning locally
+            print(f"[FFmpeg Warning] System FFmpeg at {w} lacks libx264. Bypassing...")
     return ff
 
 

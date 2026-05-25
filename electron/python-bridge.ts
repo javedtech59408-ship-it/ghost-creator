@@ -45,7 +45,7 @@ export class PythonBridge {
     this.proc.stderr?.on("data", (d) => console.error("[API]", d.toString()));
     this.proc.on("exit", (code) => console.warn("[API] exited", code));
 
-    await this.waitForHealth(60000);
+    await this.waitForHealth(120000);
     return this.baseUrl;
   }
 

@@ -742,29 +742,33 @@ export function SettingsTab({ onBackendChange }: Props) {
   };
 
   const saveProfileChanges = async (index: number) => {
-    const updated = [...profiles];
-    updated[index] = {
-      ...updated[index],
-      name: editName,
-      views_28d: editViews,
-      subs_28d: editSubs,
-      earnings_28d: editEarnings,
-      logo_path: editLogoPath,
-      channel_url: editChannelUrl,
-      channel_id: editChannelId,
-      path: editProfilePath,
-    };
-    setProfiles(updated);
-    set("pipeline.chrome_profiles", updated);
-    setEditingIndex(null);
-    
-    // Save to configuration immediately
-    cfg.pipeline = cfg.pipeline || {};
-    (cfg.pipeline as Record<string, unknown>).chrome_profiles = updated;
-    await api.patchConfig({ "pipeline.chrome_profiles": updated });
-    await api.saveConfig();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const updated = [...profiles];
+      updated[index] = {
+        ...updated[index],
+        name: editName,
+        views_28d: editViews,
+        subs_28d: editSubs,
+        earnings_28d: editEarnings,
+        logo_path: editLogoPath,
+        channel_url: editChannelUrl,
+        channel_id: editChannelId,
+        path: editProfilePath,
+      };
+      setProfiles(updated);
+      set("pipeline.chrome_profiles", updated);
+      setEditingIndex(null);
+      
+      // Save to configuration immediately
+      cfg.pipeline = cfg.pipeline || {};
+      (cfg.pipeline as Record<string, unknown>).chrome_profiles = updated;
+      await api.patchConfig({ "pipeline.chrome_profiles": updated });
+      await api.saveConfig();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      alert("Profile save failed: " + err);
+    }
   };
 
   const load = useCallback(async () => {
@@ -872,20 +876,24 @@ export function SettingsTab({ onBackendChange }: Props) {
   };
 
   const save = async () => {
-    const flat: Record<string, unknown> = {};
-    const flatten = (obj: ConfigData, prefix = "") => {
-      for (const [k, v] of Object.entries(obj)) {
-        const key = prefix ? `${prefix}.${k}` : k;
-        if (v && typeof v === "object" && !Array.isArray(v)) flatten(v as ConfigData, key);
-        else flat[key] = v;
-      }
-    };
-    flatten(cfg);
-    await api.patchConfig(flat);
-    await api.saveConfig();
-    setSaved(true);
-    onBackendChange();
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const flat: Record<string, unknown> = {};
+      const flatten = (obj: ConfigData, prefix = "") => {
+        for (const [k, v] of Object.entries(obj)) {
+          const key = prefix ? `${prefix}.${k}` : k;
+          if (v && typeof v === "object" && !Array.isArray(v)) flatten(v as ConfigData, key);
+          else flat[key] = v;
+        }
+      };
+      flatten(cfg);
+      await api.patchConfig(flat);
+      await api.saveConfig();
+      setSaved(true);
+      onBackendChange();
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      alert("Save failed: " + err);
+    }
   };
 
   const g = (path: string, fb: unknown = "") => getNested(cfg, path, fb);

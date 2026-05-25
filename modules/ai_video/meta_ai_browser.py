@@ -386,6 +386,7 @@ async def _fetch_clips_meta_ai_async(
     output_dir: Path,
     max_clip_duration: int,
     progress_callback: _CB,
+    cancellation_check: Callable[[], bool] | None = None,
 ) -> list[Path | None]:
     output_dir.mkdir(parents=True, exist_ok=True)
     total = len(segments)
@@ -401,6 +402,10 @@ async def _fetch_clips_meta_ai_async(
     async def _run_all(page):
         nonlocal results
         for i, seg in enumerate(segments, 1):
+            if cancellation_check and cancellation_check():
+                _notify(progress_callback, "🎬 Meta AI: Cancellation requested — stopping video generation.")
+                break
+
             query = seg.get("video_query") or seg.get("voiceover", "documentary scenery")[:60]
             clip_path = output_dir / f"clip_{i:02d}.mp4"
             _notify(progress_callback, f"🎬 Meta AI clip {i}/{total}: {query!r}")
@@ -434,10 +439,11 @@ def fetch_clips_meta_ai(
     output_dir: Path,
     max_clip_duration: int = 120,
     progress_callback: _CB = None,
+    cancellation_check: Callable[[], bool] | None = None,
 ) -> list[Path | None]:
     """Sync entry for pipeline — one browser session, all segments."""
     return asyncio.run(
-        _fetch_clips_meta_ai_async(segments, output_dir, max_clip_duration, progress_callback)
+        _fetch_clips_meta_ai_async(segments, output_dir, max_clip_duration, progress_callback, cancellation_check)
     )
 
 

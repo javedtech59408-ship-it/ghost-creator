@@ -27,10 +27,9 @@ from pathlib import Path
 
 log = logging.getLogger("ghost.ffmpeg_bootstrap")
 
-# Same archive as ensure_ffmpeg.ps1
+# Gyan's FFmpeg Essentials GitHub Release mirror (smaller, contains libx264, uses GitHub CDN)
 FFMPEG_ZIP_URL = (
-    "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/"
-    "ffmpeg-master-latest-win64-gpl.zip"
+    "https://github.com/GyanD/codexffmpeg/releases/download/7.0.1/ffmpeg-7.0.1-essentials_build.zip"
 )
 
 _USER_AGENT = "GhostCreatorAI-FFmpegBootstrap/4.2.2"
@@ -54,12 +53,17 @@ def _exe_names() -> tuple[str, str]:
 
 
 def ffmpeg_binaries_present() -> bool:
-    """True if cached (or discoverable) FFmpeg + ffprobe exist."""
+    """True if cached (or discoverable) FFmpeg + ffprobe exist and are valid."""
     ff_n, fp_n = _exe_names()
     rd = runtime_ffmpeg_dir()
     if (rd / ff_n).is_file() and (rd / fp_n).is_file():
         return True
-    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+    
+    from config import get_ffmpeg_executable, get_ffprobe_executable
+    import os
+    ff_exe = get_ffmpeg_executable()
+    fp_exe = get_ffprobe_executable()
+    if os.path.isabs(ff_exe) and os.path.exists(ff_exe) and os.path.isabs(fp_exe) and os.path.exists(fp_exe):
         return True
     return False
 
@@ -270,11 +274,9 @@ def configure_pydub_subprocess() -> None:
 
 def prepare_ffmpeg_runtime(*, progress=None, progress_ratio=None, ui_tick=None) -> None:
     """
-    For frozen Windows .exe only: download FFmpeg if missing.
-    Silent no-op when not frozen or when binaries already available.
+    Download FFmpeg if missing or invalid.
+    Silent no-op when binaries already available.
     """
-    if not getattr(sys, "frozen", False):
-        return
     if sys.platform != "win32":
         return
     if ffmpeg_binaries_present():

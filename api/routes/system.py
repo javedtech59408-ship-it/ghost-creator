@@ -64,8 +64,8 @@ def probe_ollama() -> dict:
 
 
 def bootstrap_ffmpeg() -> None:
-    """First-run FFmpeg download for frozen API exe on Windows."""
-    if not getattr(sys, "frozen", False) or sys.platform != "win32":
+    """First-run FFmpeg download for Windows."""
+    if sys.platform != "win32":
         return
     try:
         from core.ffmpeg_bootstrap import configure_pydub_subprocess, ffmpeg_binaries_present, prepare_ffmpeg_runtime

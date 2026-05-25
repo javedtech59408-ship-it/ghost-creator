@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.electron.json && vite build",
-    "electron:dev": "tsc -p tsconfig.electron.json && concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "electron:dev": "tsc -p tsconfig.electron.json && concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && electron . --disable-gpu --disable-software-rasterizer --disable-gpu-compositing --disable-gpu-sandbox --no-sandbox --in-process-gpu\"",
     "electron:build": "npm run build && electron-builder --win",
     "preview": "vite preview"
   },
@@ -23,7 +23,7 @@
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
-    "electron": "^36.3.1",
+    "electron": "^36.9.5",
     "electron-builder": "^26.0.12",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
@@ -43,7 +43,9 @@
       {
         "from": "dist-api/GhostCreatorAPI",
         "to": "GhostCreatorAPI",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "icon.ico",
@@ -52,7 +54,12 @@
     ],
     "win": {
       "target": [
-        { "target": "dir", "arch": ["x64"] }
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "icon.ico",
       "executableName": "GhostCreatorAI"

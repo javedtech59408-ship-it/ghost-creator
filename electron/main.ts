@@ -2,6 +2,15 @@ import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import { PythonBridge } from "./python-bridge";
 
+// Disable hardware acceleration and GPU process completely to prevent startup crashes
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-software-rasterizer");
+app.commandLine.appendSwitch("disable-gpu-compositing");
+app.commandLine.appendSwitch("disable-gpu-sandbox");
+app.commandLine.appendSwitch("no-sandbox");
+app.commandLine.appendSwitch("in-process-gpu");
+app.disableHardwareAcceleration();
+
 let mainWindow: BrowserWindow | null = null;
 let pythonBridge: PythonBridge | null = null;
 

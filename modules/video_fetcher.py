@@ -276,6 +276,7 @@ def fetch_clips(
     output_dir: Path,
     max_clip_duration: int = 120,
     progress_callback: _CB = None,
+    cancellation_check: Callable[[], bool] | None = None,
 ) -> list[Path | None]:
     """
     Download one footage clip per script segment.
@@ -285,6 +286,7 @@ def fetch_clips(
         output_dir:        where to save clip_01.mp4 … clip_N.mp4
         max_clip_duration: hint passed through to download_clip
         progress_callback: optional fn(str) for GUI updates
+        cancellation_check: optional callback returning True if cancelled
 
     Returns:
         list[Path | None] — None where download failed
@@ -294,6 +296,10 @@ def fetch_clips(
     total = len(segments)
 
     for i, seg in enumerate(segments, 1):
+        if cancellation_check and cancellation_check():
+            _notify(progress_callback, "📥 Cancellation requested — stopping clip downloads.")
+            break
+
         query = seg.get("video_query", "")
         if not query:
             query = seg.get("voiceover", "nature scenery documentary")[:60]
@@ -327,6 +333,7 @@ def fetch_clips_for_pipeline(
     output_dir: Path,
     max_clip_duration: int = 120,
     progress_callback: _CB = None,
+    cancellation_check: Callable[[], bool] | None = None,
 ) -> list[Path | None]:
     """
     Route footage download to stock (Pexels/yt-dlp) or AI browser automation.
@@ -340,6 +347,7 @@ def fetch_clips_for_pipeline(
             output_dir,
             max_clip_duration=max_clip_duration,
             progress_callback=progress_callback,
+            cancellation_check=cancellation_check,
         )
     if source == "grok":
         from modules.ai_video.grok_browser import fetch_clips_grok
@@ -349,10 +357,12 @@ def fetch_clips_for_pipeline(
             output_dir,
             max_clip_duration=max_clip_duration,
             progress_callback=progress_callback,
+            cancellation_check=cancellation_check,
         )
     return fetch_clips(
         segments,
         output_dir,
         max_clip_duration=max_clip_duration,
         progress_callback=progress_callback,
+        cancellation_check=cancellation_check,
     )

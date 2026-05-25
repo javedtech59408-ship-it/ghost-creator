@@ -79,17 +79,25 @@ def health() -> dict:
 async def on_startup() -> None:
     loop = asyncio.get_event_loop()
     get_broadcaster().bind_loop(loop)
-    bootstrap_ffmpeg()
-    try:
-        from core.ffmpeg_bootstrap import configure_pydub_subprocess
-        configure_pydub_subprocess()
-    except Exception:
-        pass
-    try:
-        from core.stock_manager import ensure_stock_assets
-        ensure_stock_assets()
-    except Exception:
-        pass
+    
+    # Run heavy initialization tasks asynchronously so they don't block uvicorn from binding the port immediately
+    def run_bg_tasks():
+        try:
+            bootstrap_ffmpeg()
+        except Exception:
+            pass
+        try:
+            from core.ffmpeg_bootstrap import configure_pydub_subprocess
+            configure_pydub_subprocess()
+        except Exception:
+            pass
+        try:
+            from core.stock_manager import ensure_stock_assets
+            ensure_stock_assets()
+        except Exception:
+            pass
+
+    loop.run_in_executor(None, run_bg_tasks)
 
 
 def main() -> None:

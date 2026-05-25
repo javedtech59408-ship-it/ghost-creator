@@ -24,6 +24,7 @@ interface Props {
   setSystemState: (s: SystemState) => void;
   onPipelineDone: () => void;
   onPipelineStateChange?: (s: PipelineLiveState) => void;
+  isActive?: boolean;
 }
 
 const LANGUAGES = [
@@ -51,7 +52,7 @@ const levelColors: Record<string, string> = {
   WARNING: theme.accentWarn,
 };
 
-export function DocumentaryTab({ setSystemState, onPipelineDone, onPipelineStateChange }: Props) {
+export function DocumentaryTab({ setSystemState, onPipelineDone, onPipelineStateChange, isActive }: Props) {
   const [mode, setMode] = useState<"short" | "long">("short");
   const [duration, setDuration] = useState(60);
   const [topic, setTopic] = useState("");
@@ -91,26 +92,28 @@ export function DocumentaryTab({ setSystemState, onPipelineDone, onPipelineState
   runIdRef.current = runId;
 
   useEffect(() => {
-    api.getConfig().then((cfg) => {
-      const c = cfg as Record<string, unknown>;
-      const doc = (c.documentary || {}) as Record<string, unknown>;
-      const pipe = (c.pipeline || {}) as Record<string, unknown>;
-      setMode((doc.length_mode as "short" | "long") || "short");
-      setDuration(Number(doc.short_duration) || 60);
-      setLanguage(String(pipe.language || "hi"));
-      setVoiceBackend(String(doc.voice_backend || (c.tts as Record<string, string>)?.backend || "omnivoice"));
-      setSegments(String(doc.segments ?? 0));
-      setBurnSubs(Boolean(doc.burn_subtitles));
-      setAspectRatio(String(c.aspect_ratio || "9:16"));
+    if (isActive) {
+      api.getConfig().then((cfg) => {
+        const c = cfg as Record<string, unknown>;
+        const doc = (c.documentary || {}) as Record<string, unknown>;
+        const pipe = (c.pipeline || {}) as Record<string, unknown>;
+        setMode((doc.length_mode as "short" | "long") || "short");
+        setDuration(Number(doc.short_duration) || 60);
+        setLanguage(String(pipe.language || "hi"));
+        setVoiceBackend(String(doc.voice_backend || (c.tts as Record<string, string>)?.backend || "omnivoice"));
+        setSegments(String(doc.segments ?? 0));
+        setBurnSubs(Boolean(doc.burn_subtitles));
+        setAspectRatio(String(c.aspect_ratio || "9:16"));
 
-      const subStyle = (c.subtitle_style || {}) as Record<string, unknown>;
-      setCaptionLang(String(subStyle.language || "voiceover"));
-      setCaptionColor(String(subStyle.color || "#FFFFFF"));
-      setCaptionBold(subStyle.bold !== undefined ? Boolean(subStyle.bold) : true);
-      setCaptionItalic(subStyle.italic !== undefined ? Boolean(subStyle.italic) : false);
-      setFootageSource(String(doc.footage_source || "stock"));
-    });
-  }, []);
+        const subStyle = (c.subtitle_style || {}) as Record<string, unknown>;
+        setCaptionLang(String(subStyle.language || "voiceover"));
+        setCaptionColor(String(subStyle.color || "#FFFFFF"));
+        setCaptionBold(subStyle.bold !== undefined ? Boolean(subStyle.bold) : true);
+        setCaptionItalic(subStyle.italic !== undefined ? Boolean(subStyle.italic) : false);
+        setFootageSource(String(doc.footage_source || "stock"));
+      });
+    }
+  }, [isActive]);
 
   const appendLog = useCallback((level: string, message: string) => {
     setLogs((prev) => [...prev.slice(-500), { level, message }]);

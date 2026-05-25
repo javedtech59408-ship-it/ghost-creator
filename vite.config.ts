@@ -16,6 +16,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: "127.0.0.1",
     strictPort: true,
     watch: {
       ignored: [
@@ -24,11 +25,16 @@ export default defineConfig({
         "**/build-api/**",
         "**/dist-api/**",
         "**/build/**",
+        "**/release/**",
+        "**/dist/**",
+        "**/installer_output/**",
         "**/node_modules/**",
         "**/config.json",
         "**/.env.local",
         "**/.env",
         "**/*.log",
+        "**/*.exe",
+        "**/*.zip",
       ],
     },
   },

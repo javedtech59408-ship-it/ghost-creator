@@ -19,6 +19,12 @@ a = Analysis(
     datas=[
         (os.path.join(ROOT, 'docs'), 'docs'),
         (os.path.join(ROOT, 'api', 'templates'), os.path.join('api', 'templates')),
+        # Manually copy pandas, numpy, pytrends, pytz, and dateutil to bypass code analysis crashes
+        (os.path.join(ROOT, 'venv', 'Lib', 'site-packages', 'pandas'), 'pandas'),
+        (os.path.join(ROOT, 'venv', 'Lib', 'site-packages', 'numpy'), 'numpy'),
+        (os.path.join(ROOT, 'venv', 'Lib', 'site-packages', 'pytrends'), 'pytrends'),
+        (os.path.join(ROOT, 'venv', 'Lib', 'site-packages', 'pytz'), 'pytz'),
+        (os.path.join(ROOT, 'venv', 'Lib', 'site-packages', 'dateutil'), 'dateutil'),
     ],
     hiddenimports=[
         # FastAPI / Uvicorn
@@ -103,10 +109,9 @@ a = Analysis(
         'tensorflow',
         'sklearn',
         'scipy',
-        # pandas causes dis.py crash on Python 3.10.0 — skip static analysis
+        # pandas, numpy, and pytrends cause dis.py static analysis crash on Python 3.10 — skip analysis
         'pandas',
         'numpy',
-        # pytrends uses pandas — skip
         'pytrends',
         # Not needed
         'numba',
